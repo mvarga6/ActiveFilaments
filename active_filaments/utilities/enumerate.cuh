@@ -1,5 +1,5 @@
-#ifndef __AF_UTILITIES_ENUMORATE_CUH__
-#define __AF_UTILITIES_ENUMORATE_CUH__
+#ifndef __AF_UTILITIES_ENUMERATE_CUH__
+#define __AF_UTILITIES_ENUMERATE_CUH__
 
 #include <cuda_runtime.h>
 
@@ -59,10 +59,10 @@ namespace af
     using enumeratedObject = thrust::tuple<uint,T>;
 
     template <typename T>
-    using deviceArrayIter = thrust::device_vector<T>::iterator;
+    class deviceArrayIter: public thrust::device_vector<T>::iterator{};
 
     template <typename T>
-    using hostArrayIter = thrust::host_vector<T>::iterator;
+    class hostArrayIter: public thrust::host_vector<T>::iterator{};
 
     template <typename T>
     using enumeratedDeviceArrayIter = thrust::tuple<counter, deviceArrayIter<T>>;
