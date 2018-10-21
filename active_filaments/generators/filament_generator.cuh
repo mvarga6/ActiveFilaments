@@ -92,6 +92,8 @@ namespace af
             p.filament_id = this->filament_id;
             p.local_id    = this->local_id;
 
+            // TODO: set tangent vector
+
             this->update();
 
             return p;

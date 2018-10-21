@@ -26,6 +26,7 @@ namespace af
         ParticleOutputWriter(ofstream& stream)
             : print_count(0), out(&stream) {}
 
+        virtual void update(const ParticleDeviceArray& particles) = 0;
         virtual void update(const ParticleHostArray& particles) = 0;
     };
     
@@ -46,7 +47,7 @@ namespace af
             file_name = filebase + ".xyz";
             out = new ofstream(file_name, ofstream::out);
             if (!out->is_open())
-                throw exception("Could not open outputfile");
+                throw runtime_error("Could not open outputfile");
         }
 
         ~ParticleXYZWriter()
@@ -54,16 +55,19 @@ namespace af
             if (out->is_open()) out->close();
         }
 
-        void update(const ParticleHostArray& particles)
+        void update(const ParticleDeviceArray& particles)
         {
             // only print at the specified rate
             if (++call_count % prate != 1) return;
+
+            static ParticleHostArray sample(particles.size());
+            thrust::copy_n(particles.begin(), particles.size(), sample.begin());
 
             // write output to a string stream
             stringstream xyz;
             xyz << particles.size() << endl;
             xyz << ++print_count << endl;
-            for (auto p : particles)            
+            for (auto p : sample)            
                 xyz << "A " << p.r.x << " " << p.r.y << " " << p.r.z << endl;
 
             // write string stream
@@ -71,6 +75,11 @@ namespace af
 
             // TODO: Debug logger
             LOG(INFO) << "[ " << print_count << " ] Wrote particles to " << file_name;
+        }
+
+        void update(const ParticleHostArray& particles)
+        {
+
         }
     };
 }

@@ -5,10 +5,9 @@
 #include <device_launch_parameters.h>
 #include <math_functions.h>
 
-#include <thrust/device_vector.h>
-#include <thrust/sequence.h>
-#include <thrust/for_each.h>
-
+// #include <thrust/device_vector.h>
+// #include <thrust/sequence.h>
+// #include <thrust/for_each.h>
 
 #include "../neighbor_finding/cells.cuh"
 #include "bonds.h"
@@ -57,24 +56,54 @@ namespace af
                 // how many neighboring cells are there
                 uint n_dirs = powf(3, dimension);
 
+                // local variables so were not accessing
+                // global memory for every calculation
+                float3 r1, f;
+                uint p1_local_id;
+                int next_idx, prev_idx;
+                float3 next_r, prev_r;
+
                 for (uint p1_idx = head;   // the particles we're applying
                     p1_idx < head + count; // forces too
                     p1_idx++)
                 {
                     // get first particle ref
-                    Particle* p1 = &particles[p1_idx];
-                    const float3 r1 = p1->r;
+                    Particle *p1 = &particles[p1_idx];
+                    r1 = p1->r;
+                    next_idx = p1->next_idx;
+                    prev_idx = p1->prev_idx;
+                    p1_local_id = p1->local_id;
 
                     // aggregate forces in ths object
-                    float3 f = zero_float3();
+                    f = zero_float3();
 
-                    // positions of particles ahead and
-                    // behind for calculating bending forces.
-                    float3 chain_neighbor_ahead_r;
-                    float3 chain_neighbor_behind_r;
+                    //
+                    // Filament Backbone Forces
+                    //
+                    
+                    if (next_idx >= 0) // with particle ahead
+                    {
+                        next_r = particles[next_idx].r;
+                        f += (*backbone_bond)(r1, next_r);
+                    }
+                        
+                    if (prev_idx >= 0) // with particle behind
+                    {
+                        prev_r = particles[prev_idx].r;
+                        f += (*backbone_bond)(r1, prev_r);
+                    }
+                        
+                    //
+                    // Bond Bending Forces
+                    // 
 
-                    // loop over cells
-                    for (int dir = 0; dir < n_dirs; dir++)
+                    f += (*filament_bending)(r1, prev_r, next_r);
+  
+                    //
+                    // Particle-Particle Forces
+                    //
+
+                    for (int dir = 0; dir < n_dirs; dir++) // loop over cells
                     {
                         // find particles for the search cell
                         uint neighbor_cell_idx = cells.neighbor_idx(cell_idx, dir);
@@ -82,56 +111,36 @@ namespace af
                         uint neighbor_head = cell_heads[neighbor_cell_idx];
                         uint neighbor_count = cell_counts[neighbor_cell_idx];
                     
-                        for (uint p2_idx = neighbor_head;        // the neighbor we're calculating
+                        for (uint p2_idx = neighbor_head;            // the neighbors we're calculating
                             p2_idx < neighbor_head + neighbor_count; // forces with
                             p2_idx++)
                         {
-                            // don't calculate forces with yourself
-                            if (p1_idx == p2_idx) continue;
-
-                            // get the ref to other particle
-                            Particle* p2 = &particles[p2_idx];
-                            const float3 r2 = p2->r;
+                            if (p2_idx == p1_idx) continue; // don't calculate forces with yourself
+                            if (p2_idx == next_idx) continue; // don't calculate if your bonded
+                            if (p2_idx == prev_idx) continue;
 
                             // Same filament forces
-                            bool same_filament = p1->filament_id == p2->filament_id;
-                            if (same_filament)
+                            if (p1->filament_id == particles[p2_idx].filament_id)
                             {
-                                // distance along backbone
-                                int local_dist = p2->local_id - p1->local_id;
-                                bool bonded = abs(local_dist) == 1;
-
-                                if (bonded) // particles are next to eachother in chain
-                                {
-                                    // apply backbone bonding force
-                                    f += (*backbone_bond)(r1, r2);
-
-                                    // store positions of neighbors in chain
-                                    if (local_dist == 1) // particle ahead
-                                        chain_neighbor_ahead_r = r2;
-                                    else 
-                                        chain_neighbor_behind_r = r2;
-                                } 
-                                else if (local_dist > 2) // normal interaction
-                                    f += (*particle_particle)(p1->r, p2->r);
+                                // normal interaction if two particles in the
+                                // same filament are further apart than a min
+                                if (abs(int(particles[p2_idx].local_id - p1_local_id)) >= opts.min_local_sep_for_forces)
+                                    f += (*particle_particle)(r1, particles[p2_idx].r);
                             }
-                            else 
+                            // Different filament forces
+                            else
                             {
-                                f += (*particle_particle)(r1, r2);
+                                f += (*particle_particle)(r1, particles[p2_idx].r);
 
                                 // TODO: extensile forces
                             }
                         }
                     }
 
-                    // Bond Bending Forces
-                    f += (*filament_bending)(r1, chain_neighbor_behind_r, chain_neighbor_ahead_r);
-
-                    // apply forces to particle
-                    p1->f += f;
-                    //printf("%f %f %f\n", f.x, f.y, f.z);
+                    p1->f += f;  // apply forces to particle
                 }
 
+                // delete force functions
                 delete backbone_bond;
                 delete particle_particle;
                 delete filament_bending;

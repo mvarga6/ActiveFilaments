@@ -84,6 +84,11 @@ __VECTOR_FUNCTIONS_DECL__ float mag(const float3& a)
     return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);
 }
 
+__VECTOR_FUNCTIONS_DECL__ float3 norm(const float3& a)
+{
+    return a / mag(a);
+}
+
 __VECTOR_FUNCTIONS_DECL__ float mag_sqrd(const float3& a)
 {
     return a.x*a.x + a.y*a.y + a.z*a.z;

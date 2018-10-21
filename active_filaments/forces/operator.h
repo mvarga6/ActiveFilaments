@@ -6,6 +6,7 @@
 #include "../particle.cuh"
 #include "../neighbor_finding/neighbor_finder.cuh"
 #include "force_kernel.cuh"
+#include "preforce_kernel.cuh"
 
 namespace af
 {
@@ -19,15 +20,27 @@ namespace af
             : neighbors(neighbor_finder), opts(options){}
 
         __host__ 
-        void update(ParticleDeviceArray& particles)
+        void update(ParticleDeviceArray& particles, uint parts_per_filament)
         {
             // update neighbors
             if (neighbors != NULL)
                 neighbors->update(particles);
 
             // calculate forces
-            Cells cells = neighbors->get_cells();
+            Cells cells = neighbors->get_cells(); //TODO get this from sim container
             size_t n_cells = cells.count();
+
+            preforce_kernel<<<256,n_cells/256 + 1>>>
+            (
+                thrust::raw_pointer_cast(&particles[0]),
+                particles.size(), 
+                parts_per_filament,
+                thrust::raw_pointer_cast(&cell_head_idx[0]),
+                thrust::raw_pointer_cast(&cell_count[0]),
+                cells, 2
+            );
+
+            cudaDeviceSynchronize();
 
             force_kernel<<<256,n_cells/256 + 1>>>
             (
@@ -35,7 +48,7 @@ namespace af
                 particles.size(),
                 thrust::raw_pointer_cast(&cell_head_idx[0]),
                 thrust::raw_pointer_cast(&cell_count[0]),
-                cells, 3, opts
+                cells, 2, opts
             );
         }
 
