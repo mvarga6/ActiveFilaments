@@ -22,6 +22,8 @@ namespace af
         __host__ 
         void update(ParticleDeviceArray& particles, uint parts_per_filament)
         {
+            const int TPB = 128;
+
             // update neighbors
             if (neighbors != NULL)
                 neighbors->update(particles);
@@ -30,7 +32,7 @@ namespace af
             Cells cells = neighbors->get_cells(); //TODO get this from sim container
             size_t n_cells = cells.count();
 
-            preforce_kernel<<<256,n_cells/256 + 1>>>
+            preforce_kernel<<<TPB,n_cells/TPB + 1>>>
             (
                 thrust::raw_pointer_cast(&particles[0]),
                 particles.size(), 
@@ -42,7 +44,7 @@ namespace af
 
             cudaDeviceSynchronize();
 
-            force_kernel<<<256,n_cells/256 + 1>>>
+            force_kernel<<<TPB,n_cells/TPB + 1>>>
             (
                 thrust::raw_pointer_cast(&particles[0]),
                 particles.size(),

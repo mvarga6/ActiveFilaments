@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     // these parameters should be read from cmdline input
     size_t N = 125;
     size_t n = 5;
-    size_t n_steps = 10;
+    size_t n_steps = 100;
     float3 box = make_float3(30,30,0);
     const float dt = 0.0001f;
     const float kBT = 0.1f;
@@ -29,8 +29,7 @@ int main(int argc, char *argv[])
     if (argc > 5) box.z = atof(argv[5]);
     if (argc > 6) n_steps = atoi(argv[6]);
     if (argc > 7) print_rate = atoi(argv[7]);
-    //if (argc > 8) verbose_neighbor_finding = true;
-
+    if (argc > 8) verbose_neighbor_finding = bool(atoi(argv[8]));
     LOG(INFO) << "Loaded parameters.";
 
     // create particle generator from AF library
