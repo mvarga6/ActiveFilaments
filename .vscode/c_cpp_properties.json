@@ -28,6 +28,7 @@
             "includePath": [
                 "/usr/include",
                 "/usr/local/include",
+                "/usr/local/cuda/include",
                 "${workspaceFolder}/active_filaments"
             ],
             "defines": [],
