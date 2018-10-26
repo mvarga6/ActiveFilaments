@@ -28,7 +28,7 @@
             "includePath": [
                 "/usr/include",
                 "/usr/local/include",
-                "${workspaceFolder}"
+                "${workspaceFolder}/active_filaments"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",

@@ -24,6 +24,10 @@ namespace af
         uint local_id;    // ID of particle within filament
         uint group_id;    // ID of the group of particles
 
+        int next_idx; // idx of next in filament
+        int prev_idx; // idx of previous in filament
+        float3 t;     // Tangent vector at particle position
+
         //
         // Class Methods
         //
@@ -41,6 +45,7 @@ namespace af
             p.filament_id = 0;
             p.group_id = 0;
             p.local_id = 0;
+            p.t = zero_float3();
             return p;
         }
     };

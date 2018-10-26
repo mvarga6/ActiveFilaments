@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     if (argc > 5) box.z = atof(argv[5]);
     if (argc > 6) n_steps = atoi(argv[6]);
     if (argc > 7) print_rate = atoi(argv[7]);
-    //if (argc > 7) verbose_neighbor_finding = true;
+    //if (argc > 8) verbose_neighbor_finding = true;
 
     // create particle generator from AF library
     //ParticleGeneratorOptions particle_opts;
@@ -36,6 +36,8 @@ int main(int argc, char *argv[])
 
     FilamentGeneratorOptions gen_opts(n);
     gen_opts.bounds = box;
+    gen_opts.spacing = 0.8;
+    gen_opts.bond_length = 0.9;
     GridFilamentGenerator filament_generator(gen_opts);
 
     // generate N particles in a thrust vector
@@ -53,7 +55,7 @@ int main(int argc, char *argv[])
     LangevinThermostat langevin_thermostat(gamma, kBT, dt);
 
     // create things for neighbor finding (will be wrapped by nicer api)
-    auto cell_size = make_float3(2,2,2);
+    auto cell_size = make_float3(1.5,1.5,1.5);
     auto grid_dim = make_uint3(box.x/cell_size.x, box.y/cell_size.y, 1);
     Cells cells(grid_dim, cell_size);
     NeighborFinder neighbor_finding(cells);
@@ -64,7 +66,7 @@ int main(int argc, char *argv[])
     // Force calculations
     ForceKernelOptions force_opts;
     force_opts.filament_interaction = PairWiseForceType::LennardJones;
-    force_opts.interaction_energy_scale = 0.25;
+    force_opts.interaction_energy_scale = 0.4;
     force_opts.interaction_length_scale = 1.0;
     force_opts.backbone_energy_scale = 100.f;
     force_opts.backbone_length_scale = 0.65;
@@ -80,7 +82,7 @@ int main(int argc, char *argv[])
         //std::cout << t << " ";
 
         // forces from pair-wise neighbors
-        forces.update(particles_gpu);
+        forces.update(particles_gpu, n); //TODO: pass n in better way
 
         // apply langevin noise
         //langevin_thermostat.update(particles_gpu);
@@ -88,13 +90,8 @@ int main(int argc, char *argv[])
         // integrate time
         velocity_verlet.update(particles_gpu);
 
-        // periodically copy back to cpu to print
-        //pull_and_print(particles_gpu, particles);
-
         // write the output files
-        ParticleHostArray sample(N*n);
-        thrust::copy_n(particles_gpu.begin(), N*n, sample.begin());
-        output.update(sample);
+        output.update(particles_gpu);
 
         // print first 5 particles
         if (verbose_neighbor_finding)

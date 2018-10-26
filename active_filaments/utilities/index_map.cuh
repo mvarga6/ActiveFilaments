@@ -3,7 +3,7 @@
 
 #include <cuda_runtime.h>
 #include "../particle.cuh"
-#include "enumorate.cuh"
+#include "enumerate.cuh"
 
 namespace af
 {
@@ -39,7 +39,7 @@ namespace af
         // __host__
         // static void update(ParticleDeviceArray& particles)
         // {
-        //     EnumoratedDeviceParticles parts(particles);
+        //     EnumeratedDeviceParticles parts(particles);
         //     thrust::for_each(parts.begin(), parts.end(), ParticleIdxMap());
         // }
     };

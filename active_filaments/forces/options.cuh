@@ -1,6 +1,8 @@
 #ifndef __AF_FORCES_OTPTIONS_CUH__
 #define __AF_FORCES_OTPTIONS_CUH__
 
+#include "../types.h"
+
 namespace af 
 {
     enum class FilamentBondType
@@ -37,6 +39,8 @@ namespace af
         BondBendingType filament_bending = BondBendingType::None;
         float bending_energy_scale = 10.0f;
         float bending_length_scale = 1.0f;
+
+        uint min_local_sep_for_forces = 3;
     };
 }
 
