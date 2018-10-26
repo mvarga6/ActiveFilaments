@@ -4,5 +4,5 @@
 #include "forces/bonds.h"
 #include "forces/noise.cuh"
 #include "forces/pair_wise.h"
-#include "forces/operator.h"
+#include "forces/operator.cuh"
 #endif
