@@ -37,12 +37,13 @@ namespace af
             float r23r23 = dot(r23, r23);
             float mag12inv = 1.0f / mag(r12);
             float mag23inv = 1.0f / mag(r23);
-            float a = this->K * mag12inv * mag23inv;
-            float3 A = make_float3(a, a, a);
+            float A = -this->K * mag12inv * mag23inv;
 
-            float3 f1 = -A * (r23 - ((dot_r12_r23 / r12r12) * r12));
-            float3 f2 = -A * (((dot_r12_r23 / r12r12) * r12) - ((dot_r12_r23 / r23r23) * r23) + r12 - r23);
-            float3 f3 = -A * (((dot_r12_r23 / r23r23) * r23) - r12);
+            float c1 = dot_r12_r23 / r12r12
+            float c2 = (dot_r12_r23 / r23r23)
+            float3 f1 = A * (r23 - c1*r12);
+            float3 f2 = A * ((c1*r12 + r12) - (c2*r23 + r23));
+            float3 f3 = A * (c2*r23 - r12);
             return make_tuple(f1,f2,f3);
 
             //return zero_float3();
