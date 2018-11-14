@@ -9,7 +9,7 @@
 
 namespace af 
 {
-    typedef tuple<float3,float3,float3> float3_triple
+    typedef tuple<float3,float3,float3> float3_triple;
 
     struct BendingBase
     {
