@@ -9,6 +9,8 @@
 // #include <thrust/sequence.h>
 // #include <thrust/for_each.h>
 
+#include <thrust/tuple.h>
+
 #include "../neighbor_finding/cells.cuh"
 #include "bonds.h"
 #include "pair_wise.h"
@@ -98,9 +100,9 @@ namespace af
                     // 
 
                     float3_triple f1f2f3 = (*filament_bending)(r1, prev_r, next_r);
-                    particles[prev_idx].f += get<0>(f1f2f3);
-                    f += get<1>(f1f2f3);
-                    particles[next_idx].f += get<2>(f1f2f3);
+                    particles[prev_idx].f += thrust::get<0>(f1f2f3);
+                    f += thrust::get<1>(f1f2f3);
+                    particles[next_idx].f += thrust::get<2>(f1f2f3);
   
                     //
                     // Particle-Particle Forces
