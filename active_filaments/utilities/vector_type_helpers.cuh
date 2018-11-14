@@ -94,6 +94,21 @@ __VECTOR_FUNCTIONS_DECL__ float mag_sqrd(const float3& a)
     return a.x*a.x + a.y*a.y + a.z*a.z;
 }
 
+__VECTOR_FUNCTIONS_DECL__ float dot(const float3& a, const float3& b)
+{
+    return a.x*b.x + a.y*b.y + a.z*b.z;
+}
+
+__VECTOR_FUNCTIONS_DECL__ float operator*(const float3& a, const float3& b)
+{
+    return dot(a, b);
+}
+
+__VECTOR_FUNCTIONS_DECL__ float mul(const float3& a, const float3& b)
+{
+    return make_float3(a.x*b.x, a.y*b.y, a.z*b.z);
+}
+
 __VECTOR_FUNCTIONS_DECL__ float3 zero_float3()
 {
     return make_float3(0,0,0);
