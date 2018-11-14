@@ -22,7 +22,7 @@ namespace af
         __host__ 
         void update(ParticleDeviceArray& particles, uint parts_per_filament)
         {
-            const int TPB = 128;
+            const int TPB = 512;
 
             // update neighbors
             if (neighbors != NULL)
