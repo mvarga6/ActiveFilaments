@@ -5,5 +5,5 @@ build:
 build-debug:
 	nvcc -std=c++11 -x cu -lcurand -G -g -Wno-deprecated-gpu-targets deps/easylogging++.cc examples/simple.cpp  -o examples/linux/simple
 
-run: build
+run:
 	./examples/linux/simple 1000 10 110 110 0 1000 10
