@@ -108,7 +108,7 @@ __VECTOR_FUNCTIONS_DECL__ float operator*(const float3& a, const float3& b)
     return dot(a, b);
 }
 
-__VECTOR_FUNCTIONS_DECL__ float mul(const float3& a, const float3& b)
+__VECTOR_FUNCTIONS_DECL__ float3 mul(const float3& a, const float3& b)
 {
     return make_float3(a.x*b.x, a.y*b.y, a.z*b.z);
 }

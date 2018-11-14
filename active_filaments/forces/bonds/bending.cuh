@@ -1,15 +1,15 @@
 #ifndef __AF_BONDS_BENDING_CUH__
 #define __AF_BONDS_BENDING_CUH__
 
-#include <tuple>
 
 #include <cuda.h>
+#include <thrust/tuple.h>
 
 #include "../../utilities/vector_type_helpers.cuh"
 
 namespace af 
 {
-    typedef tuple<float3,float3,float3> float3_triple;
+    typedef thrust::tuple<float3,float3,float3> float3_triple;
 
     struct BendingBase
     {
@@ -41,10 +41,12 @@ namespace af
 
             float c1 = dot_r12_r23 / r12r12;
             float c2 = dot_r12_r23 / r23r23;
+
             float3 f1 = A * (r23 - c1*r12);
             float3 f2 = A * ((c1*r12 + r12) - (c2*r23 + r23));
             float3 f3 = A * (c2*r23 - r12);
-            return make_tuple(f1,f2,f3);
+
+            return thrust::make_tuple(f1,f2,f3);
 
             //return zero_float3();
         }
