@@ -9,10 +9,12 @@
 
 namespace af 
 {
+    typedef tuple<float3,float3,float3> float3_triple
+
     struct BendingBase
     {
         __host__ __device__
-        virtual tuple<float3,float3,float3> operator()(const float3 &r, const float3 &r_behind, const float3 &r_ahead) = 0;
+        virtual float3_triple operator()(const float3 &r, const float3 &r_behind, const float3 &r_ahead) = 0;
     };
 
     struct CosineBending : public BendingBase
@@ -24,7 +26,7 @@ namespace af
             : K(k_bend){}
 
         __host__ __device__
-        tuple<float3,float3,float3> operator()(const float3 &r, const float3 &r_behind, const float3 &r_ahead)
+        float3_triple operator()(const float3 &r, const float3 &r_behind, const float3 &r_ahead)
         {
             // TODO: apply BCs to these somehow
             float3 r12 = r - r_ahead;
@@ -36,7 +38,7 @@ namespace af
             float mag12inv = 1.0f / mag(r12);
             float mag23inv = 1.0f / mag(r23);
             float a = this->K * mag12inv * mag23inv;
-            float3 A = make_float3(a, a, a)
+            float3 A = make_float3(a, a, a);
 
             float3 f1 = -A * (r23 - ((dot_r12_r23 / r12r12) * r12));
             float3 f2 = -A * (((dot_r12_r23 / r12r12) * r12) - ((dot_r12_r23 / r23r23) * r23) + r12 - r23);

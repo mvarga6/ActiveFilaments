@@ -13,6 +13,10 @@ struct bool3;
 __VECTOR_FUNCTIONS_DECL__ bool3 make_bool3(bool x, bool y, bool z);
 
 
+__VECTOR_FUNCTIONS_DECL__ float3 operator-(const float3& a)
+{
+    return make_float3(-a.x, -a.y, -a.z);
+}
 
 __VECTOR_FUNCTIONS_DECL__ float3 operator+(const float3& a, const float3& b)
 {

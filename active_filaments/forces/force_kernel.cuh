@@ -97,7 +97,7 @@ namespace af
                     // Bond Bending Forces
                     // 
 
-                    f1f2f3 = (*filament_bending)(r1, prev_r, next_r);
+                    float3_triple f1f2f3 = (*filament_bending)(r1, prev_r, next_r);
                     particles[prev_idx].f += get<0>(f1f2f3);
                     f += get<1>(f1f2f3);
                     particles[next_idx].f += get<2>(f1f2f3);
