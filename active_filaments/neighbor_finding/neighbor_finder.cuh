@@ -21,8 +21,8 @@ namespace af
 {
     struct IdxMap
     {
-        uint from_idx;
-        uint to_idx;
+        int from_idx;
+        int to_idx;
     };
 
     struct CreateIdxToHeadMap
@@ -153,7 +153,7 @@ namespace af
         __host__
         void update(ParticleDeviceArray& particles, uint num_filaments)
         {
-            this->preparresize_containerse_containers(particles.size(), num_filaments);
+            this->resize_containers(particles.size(), num_filaments);
             this->sort_particles_by_cells(particles);
             this->count_particles_in_cells();
             this->build_filament_heads_map(particles);
@@ -171,25 +171,25 @@ namespace af
         void resize_containers(const uint num_particles, const uint num_filaments)
         {
             // Allocate memory for per particle containers
-            if (num_particles != particle_cell_ids.size())
+            if (particle_cell_ids.size() != num_particles)
                 particle_cell_ids.resize(num_particles);
 
-            if (num_particles != filament_idxmap.size())
-                filament_idxmap.resize(num_particles)
+            if (filament_idxmap.size() != num_particles)
+                filament_idxmap.resize(num_particles);
 
             // match the number of cells
             // if (ncells != cell_ids.size())
             //     cell_ids.resize(ncells)
 
             // Allocate memory for per filament containers
-            if (num_filaments != filament_head_idx.size())
-                filament_head_idx.resize(num_filaments)
+            if (filament_head_idx.size() != num_filaments)
+                filament_head_idx.resize(num_filaments);
 
-            if (num_filaments != filament_id.size())
-                filament_id.resize(num_filaments)
+            if (filament_id.size() != num_filaments)
+                filament_id.resize(num_filaments);
 
-            if (num_filaments != filament_headonly_idxmap.size())
-                filament_headonly_idxmap.resize(num_filaments)
+            if (filament_headonly_idxmap.size() != num_filaments)
+                filament_headonly_idxmap.resize(num_filaments);
         }
 
 
@@ -251,7 +251,7 @@ namespace af
             // Sort the indices to filament heads BY the filament ids.
             // This will also use to get the idx of a filament head by
             // access that filaments element in the filament_head_idx array.
-            thrust::stable_sort_by_key(filament_id.begin(), filament_id.end(), filament_head_idx.begin())
+            thrust::stable_sort_by_key(filament_id.begin(), filament_id.end(), filament_head_idx.begin());
         }
 
 

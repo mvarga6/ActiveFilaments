@@ -12,9 +12,9 @@ int main(int argc, char *argv[])
     initialize_aflib(argc, argv);
 
     // these parameters should be read from cmdline input
-    size_t N = 125;
-    size_t n = 5;
-    size_t n_steps = 100;
+    size_t num_filaments = 125;
+    size_t particles_per_filament = 5;
+    size_t num_steps = 100;
     float3 box = make_float3(30,30,0);
     const float dt = 0.0001f;
     const float kBT = 0.1f;
