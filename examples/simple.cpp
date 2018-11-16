@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 
     // Time loop
     std::cout << std::endl << "Starting Simulation Loop..." << std::endl;
-    for (int t = 0; t < n_steps; t++)
+    for (int t = 0; t < num_steps; t++)
     {
         try
         {
