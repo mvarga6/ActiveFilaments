@@ -151,6 +151,12 @@ namespace af
             return cells;
         }
 
+        __host__ __device__
+        void operator()(Particle& p)
+        {
+            p.cell_id = cells.get_idx(p.r);
+        }
+
         // __host__ __device__
         // uint operator()(Particle& p)
         // {
@@ -218,7 +224,7 @@ namespace af
         {
             // get the cell id for each particle
             //thrust::transform(particles.begin(), particles.end(), particle_cell_ids.begin(), *this);
-            thrust::for_each(particles.begin(), particles.end(), AssignCell());
+            thrust::for_each(particles.begin(), particles.end(), *this);
 
             // sort the particle by their cell ids
             //thrust::stable_sort_by_key(particle_cell_ids.begin(), particle_cell_ids.end(), particles.begin(), *this);  
