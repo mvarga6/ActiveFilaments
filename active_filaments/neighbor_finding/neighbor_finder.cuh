@@ -257,7 +257,7 @@ namespace af
 
 
             // PRINT THE HEADS LIST TO SEE IF IT WORKED!!
-            thrust::host_vector<uint> h_fila_heads(filament_head_idx.size()):
+            thrust::host_vector<uint> h_fila_heads(filament_head_idx.size());
             thrust::copy(filament_head_idx.begin(), filament_head_idx.end(), h_fila_heads.begin());
             for (int i = 0; i < h_fila_heads.size(); i++)
                 std::cout << i << " @ " << h_fila_heads[i] << std::endl;
