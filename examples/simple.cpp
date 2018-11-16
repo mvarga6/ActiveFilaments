@@ -22,12 +22,12 @@ int main(int argc, char *argv[])
     size_t print_rate = 1;
 
     // temp for testing
-    if (argc > 1) N = atoi(argv[1]);
-    if (argc > 2) n = atoi(argv[2]);
+    if (argc > 1) num_filaments = atoi(argv[1]);
+    if (argc > 2) particles_per_filament = atoi(argv[2]);
     if (argc > 3) box.x = atof(argv[3]);
     if (argc > 4) box.y = atof(argv[4]);
     if (argc > 5) box.z = atof(argv[5]);
-    if (argc > 6) n_steps = atoi(argv[6]);
+    if (argc > 6) num_steps = atoi(argv[6]);
     if (argc > 7) print_rate = atoi(argv[7]);
     if (argc > 8) verbose_neighbor_finding = bool(atoi(argv[8]));
     LOG(INFO) << "Loaded parameters.";
@@ -37,17 +37,16 @@ int main(int argc, char *argv[])
     //particle_opts.type = InitType::Random;
     //ParticleGenerator particle_generator(particle_opts);
 
-    
 
-    FilamentGeneratorOptions gen_opts(n);
+    FilamentGeneratorOptions gen_opts(particles_per_filament);
     gen_opts.bounds = box;
     gen_opts.spacing = 0.8;
     gen_opts.bond_length = 0.9;
     GridFilamentGenerator filament_generator(gen_opts);
     LOG(INFO) << "FilamentGenerator created.";
 
-    // generate N particles in a thrust vector
-    ParticleHostArray particles = filament_generator.generate(N);
+    // generate N filaments in a thrust vector
+    ParticleHostArray particles = filament_generator.generate(num_filaments);
     LOG(INFO) << "ParticleHostArray created.";
 
     // build filaments from bonds
@@ -98,7 +97,7 @@ int main(int argc, char *argv[])
             //std::cout << t << " ";
 
             // forces from pair-wise neighbors
-            forces.update(particles_gpu, n); //TODO: pass n in better way
+            forces.update(particles_gpu, particles_per_filament, num_filaments); //TODO: pass n in better way
 
             // apply langevin noise
             //langevin_thermostat.update(particles_gpu);

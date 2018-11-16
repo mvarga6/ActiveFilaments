@@ -20,13 +20,13 @@ namespace af
             : neighbors(neighbor_finder), opts(options){}
 
         __host__ 
-        void update(ParticleDeviceArray& particles, uint parts_per_filament)
+        void update(ParticleDeviceArray& particles, uint parts_per_filament, uint num_filaments)
         {
             const int TPB = 512;
 
             // update neighbors
             if (neighbors != NULL)
-                neighbors->update(particles);
+                neighbors->update(particles, num_filaments);
 
             // calculate forces
             Cells cells = neighbors->get_cells(); //TODO get this from sim container
