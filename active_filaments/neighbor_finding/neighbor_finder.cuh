@@ -68,24 +68,6 @@ namespace af
         }
     };
 
-    struct AssignCell
-    {
-        __host__ __device__
-        void operator()(Particle& p)
-        {
-            p.cell_id = cells.get_idx(p.r);
-        }
-    };
-
-    struct SortOnCellId
-    {
-        __host__ __device__
-        bool operator()(const Particle& p1, const Particle& p2)
-        {
-            return (p1.cell_id < p2.cell_id);
-        }
-    };
-
     // thrust::device_vector<IdxMap> filament_head_map;
 
     // Using cell_head_idx and cell_count
@@ -97,7 +79,7 @@ namespace af
     // all particles in that cell
     //  OR 
     // do the same thing particle-by-particle
-    //thrust::device_vector<uint> particle_cell_ids;
+    thrust::device_vector<uint> particle_cell_ids;
     thrust::device_vector<uint> cell_head_idx;
     thrust::device_vector<uint> cell_tail_idx;
     thrust::device_vector<uint> cell_count;
@@ -152,29 +134,23 @@ namespace af
         }
 
         __host__ __device__
-        void operator()(Particle& p)
+        uint operator()(Particle& p)
         {
             p.cell_id = cells.get_idx(p.r);
+            return p.cell_id;
         }
 
-        // __host__ __device__
-        // uint operator()(Particle& p)
-        // {
-        //     p.cell_id = cells.get_idx(p.r);
-        //     return p.cell_id;
-        // }
+        __host__ __device__
+        bool operator()(const Particle& p1, const Particle& p2)
+        {
+            return (p1.cell_id < p2.cell_id);
+        }
 
-        // __host__ __device__
-        // bool operator()(const Particle& p1, const Particle& p2)
-        // {
-        //     return (p1.cell_id < p2.cell_id);
-        // }
-
-        // __host__ __device__
-        // bool operator()(const uint id1, const uint id2)
-        // {
-        //     return (id1 < id2);
-        // }
+        __host__ __device__
+        bool operator()(const uint id1, const uint id2)
+        {
+            return (id1 < id2);
+        }
 
         __host__
         void update(ParticleDeviceArray& particles, uint num_filaments)
@@ -197,8 +173,8 @@ namespace af
         void resize_containers(const uint num_particles, const uint num_filaments)
         {
             // Allocate memory for per particle containers
-            //if (particle_cell_ids.size() != num_particles)
-            //    particle_cell_ids.resize(num_particles);
+            if (particle_cell_ids.size() != num_particles)
+                particle_cell_ids.resize(num_particles);
 
             if (filament_idxmap.size() != num_particles)
                 filament_idxmap.resize(num_particles);
@@ -223,12 +199,10 @@ namespace af
         void sort_particles_by_cells(ParticleDeviceArray& particles)
         {
             // get the cell id for each particle
-            //thrust::transform(particles.begin(), particles.end(), particle_cell_ids.begin(), *this);
-            thrust::for_each(particles.begin(), particles.end(), *this);
+            thrust::transform(particles.begin(), particles.end(), particle_cell_ids.begin(), *this);
 
             // sort the particle by their cell ids
-            //thrust::stable_sort_by_key(particle_cell_ids.begin(), particle_cell_ids.end(), particles.begin(), *this);  
-            thrust::sort(particles.begin(), particles.end(), SortOnCellId());
+            thrust::stable_sort_by_key(particle_cell_ids.begin(), particle_cell_ids.end(), particles.begin(), *this);  
         }
 
 
