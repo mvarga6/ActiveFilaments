@@ -17,6 +17,8 @@
 #include "../utilities/index_map.cuh"
 #include "cells.cuh"
 
+#define NOTHEADIDX -1010
+
 namespace af
 {
     struct IdxMap
@@ -32,7 +34,7 @@ namespace af
         {
             IdxMap _pair;
             _pair.from_idx = idx;
-            _pair.to_idx = -1;
+            _pair.to_idx = NOTHEADIDX;
             if (p.local_id == 0)
                 _pair.to_idx = p.filament_id;
             return _pair;
@@ -44,7 +46,7 @@ namespace af
         __host__ __device__
         bool operator()(const IdxMap& map_item)
         {
-            return map_item.to_idx >= 0;
+            return !(map_item.to_idx == NOTHEADIDX);
         }
     };
 
@@ -252,6 +254,13 @@ namespace af
             // This will also use to get the idx of a filament head by
             // access that filaments element in the filament_head_idx array.
             thrust::stable_sort_by_key(filament_id.begin(), filament_id.end(), filament_head_idx.begin());
+
+
+            // PRINT THE HEADS LIST TO SEE IF IT WORKED!!
+            thrust::host_vector<uint> h_fila_heads(filament_head_idx.size()):
+            thrust::copy(filament_head_idx.begin(), filament_head_idx.end(), h_fila_heads.begin());
+            for (int i = 0; i < h_fila_heads.size(); i++)
+                std::cout << i << " @ " << h_fila_heads[i] << std::endl;
         }
 
 
