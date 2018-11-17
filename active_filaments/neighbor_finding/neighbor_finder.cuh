@@ -98,6 +98,22 @@ namespace af
 
     bool verbose_neighbor_finding = false;
 
+
+    __global__ void update_filament_headlist(
+        Particle* particles,
+        size_t n_particles,
+        uint* filament_headlist)
+    {
+        int pidx = blockIdx.x*blockDim.x + threadIdx.x;
+        if (pidx >= n_particles) return // stop if outside of particles
+        
+        p* = &particles[pidx]
+        if (p->local_id != 0) return // stop if not a head
+
+        // Assign the index of this head to the list
+        filament_headlist[p->filament_id] = pidx
+    }
+
     class NeighborFinder
     {
         //const float3 size;
@@ -176,8 +192,8 @@ namespace af
             if (particle_cell_ids.size() != num_particles)
                 particle_cell_ids.resize(num_particles);
 
-            if (filament_idxmap.size() != num_particles)
-                filament_idxmap.resize(num_particles);
+            //if (filament_idxmap.size() != num_particles)
+            //    filament_idxmap.resize(num_particles);
 
             // match the number of cells
             // if (ncells != cell_ids.size())
@@ -187,11 +203,11 @@ namespace af
             if (filament_head_idx.size() != num_filaments)
                 filament_head_idx.resize(num_filaments);
 
-            if (filament_id.size() != num_filaments)
-                filament_id.resize(num_filaments);
+            //if (filament_id.size() != num_filaments)
+            //    filament_id.resize(num_filaments);
 
-            if (filament_headonly_idxmap.size() != num_filaments)
-                filament_headonly_idxmap.resize(num_filaments);
+            //if (filament_headonly_idxmap.size() != num_filaments)
+            //    filament_headonly_idxmap.resize(num_filaments);
         }
 
 
@@ -204,10 +220,10 @@ namespace af
             // sort the particle by their cell ids
             thrust::stable_sort_by_key(particle_cell_ids.begin(), particle_cell_ids.end(), particles.begin(), *this);  
         
-            ParticleHostArray h_particles(particles.begin(), particles.end());
-            for (int i = 0; i < h_particles.size(); i++)
-                if (h_particles[i].local_id == 0)
-                    std::cout << h_particles[i].filament_id << " @ " << i << std::endl;
+            // ParticleHostArray h_particles(particles.begin(), particles.end());
+            // for (int i = 0; i < h_particles.size(); i++)
+            //     if (h_particles[i].local_id == 0)
+            //         std::cout << h_particles[i].filament_id << " @ " << i << std::endl;
         }
 
 
@@ -241,31 +257,39 @@ namespace af
         __host__
         void build_filament_heads_map(ParticleDeviceArray& particles)
         {
-            thrust::counting_iterator<uint> count_begin(0);
-            thrust::counting_iterator<uint> count_end = count_begin + particles.size();
+            //thrust::counting_iterator<uint> count_begin(0);
+            //thrust::counting_iterator<uint> count_end = count_begin + particles.size();
 
             // Give the tranformation an enumerated idx so we can create
             // a map from idx to filament id of the only the heads
-            thrust::transform(count_begin, count_end, particles.begin(), filament_idxmap.begin(), CreateIdxToHeadMap());
+            //thrust::transform(count_begin, count_end, particles.begin(), filament_idxmap.begin(), CreateIdxToHeadMap());
 
             // copy the idxmap elements of only the heads
-            auto headonly_end = thrust::remove_copy_if(filament_idxmap.begin(), filament_idxmap.end(), filament_headonly_idxmap.begin(), KeepHeads());
+            //auto headonly_end = thrust::remove_copy_if(filament_idxmap.begin(), filament_idxmap.end(), filament_headonly_idxmap.begin(), KeepHeads());
 
             // Select into two seperate lists so one can sort the other
-            thrust::transform(filament_headonly_idxmap.begin(), headonly_end, filament_head_idx.begin(), SelectFromIdx());
-            thrust::transform(filament_headonly_idxmap.begin(), headonly_end, filament_id.begin(), SelectToIdx());
+            //thrust::transform(filament_headonly_idxmap.begin(), headonly_end, filament_head_idx.begin(), SelectFromIdx());
+            //thrust::transform(filament_headonly_idxmap.begin(), headonly_end, filament_id.begin(), SelectToIdx());
 
             // Sort the indices to filament heads BY the filament ids.
             // This will also use to get the idx of a filament head by
             // access that filaments element in the filament_head_idx array.
-            thrust::stable_sort_by_key(filament_id.begin(), filament_id.end(), filament_head_idx.begin());
+            //thrust::stable_sort_by_key(filament_id.begin(), filament_id.end(), filament_head_idx.begin());
+            const int TPB = 256;
+            const int N = particles.size();
+
+            update_filament_headlist<<<TPB,N/TPB + 1>>>
+            (
+                thrust::raw_pointer_cast(&particles[0]),
+                N, thrust::raw_pointer_cast(&filament_head_idx[0])
+            );
 
 
             // PRINT THE HEADS LIST TO SEE IF IT WORKED!!
-            //thrust::host_vector<uint> h_fila_heads(filament_head_idx.size());
-            //thrust::copy(filament_head_idx.begin(), filament_head_idx.end(), h_fila_heads.begin());
-            //for (int i = 0; i < h_fila_heads.size(); i++)
-            //    std::cout << i << " @ " << h_fila_heads[i] << std::endl;
+            thrust::host_vector<uint> h_fila_heads(filament_head_idx.size());
+            thrust::copy(filament_head_idx.begin(), filament_head_idx.end(), h_fila_heads.begin());
+            for (int i = 0; i < h_fila_heads.size(); i++)
+               std::cout << i << " @ " << h_fila_heads[i] << std::endl;
         }
 
 
