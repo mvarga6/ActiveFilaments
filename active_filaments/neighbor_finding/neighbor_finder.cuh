@@ -105,13 +105,13 @@ namespace af
         uint* filament_headlist)
     {
         int pidx = blockIdx.x*blockDim.x + threadIdx.x;
-        if (pidx >= n_particles) return // stop if outside of particles
+        if (pidx >= n_particles) return; // stop if outside of particles
         
-        p* = &particles[pidx]
-        if (p->local_id != 0) return // stop if not a head
+        Particle* p = &particles[pidx]
+        if (p->local_id != 0) return; // stop if not a head
 
         // Assign the index of this head to the list
-        filament_headlist[p->filament_id] = pidx
+        filament_headlist[p->filament_id] = pidx;
     }
 
     class NeighborFinder
