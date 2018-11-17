@@ -203,6 +203,11 @@ namespace af
 
             // sort the particle by their cell ids
             thrust::stable_sort_by_key(particle_cell_ids.begin(), particle_cell_ids.end(), particles.begin(), *this);  
+        
+            ParticleHostArray h_particles(particles.begin(), particles.end());
+            for (int i = 0; i < h_particles.size(); i++)
+                if (h_particles[i].local_id == 0)
+                    std::cout << h_particles[i].filament_id << " @ " << i << std::endl;
         }
 
 
@@ -257,10 +262,10 @@ namespace af
 
 
             // PRINT THE HEADS LIST TO SEE IF IT WORKED!!
-            thrust::host_vector<uint> h_fila_heads(filament_head_idx.size());
-            thrust::copy(filament_head_idx.begin(), filament_head_idx.end(), h_fila_heads.begin());
-            for (int i = 0; i < h_fila_heads.size(); i++)
-                std::cout << i << " @ " << h_fila_heads[i] << std::endl;
+            //thrust::host_vector<uint> h_fila_heads(filament_head_idx.size());
+            //thrust::copy(filament_head_idx.begin(), filament_head_idx.end(), h_fila_heads.begin());
+            //for (int i = 0; i < h_fila_heads.size(); i++)
+            //    std::cout << i << " @ " << h_fila_heads[i] << std::endl;
         }
 
 
