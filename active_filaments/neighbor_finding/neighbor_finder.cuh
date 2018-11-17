@@ -107,7 +107,7 @@ namespace af
         int pidx = blockIdx.x*blockDim.x + threadIdx.x;
         if (pidx >= n_particles) return; // stop if outside of particles
         
-        Particle* p = &particles[pidx]
+        Particle* p = &particles[pidx];
         if (p->local_id != 0) return; // stop if not a head
 
         // Assign the index of this head to the list
