@@ -21,7 +21,8 @@ namespace af
 {
 
     // launch a thread per cell
-    __global__ void force_kernel(
+    __global__ 
+    void force_kernel(
         Particle* particles, 
         size_t n_particles,
         uint* cell_heads, 

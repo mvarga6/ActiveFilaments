@@ -21,53 +21,6 @@
 
 namespace af
 {
-    struct IdxMap
-    {
-        int from_idx;
-        int to_idx;
-    };
-
-    struct CreateIdxToHeadMap
-    {
-        __host__ __device__
-        IdxMap operator()(const uint idx, const Particle& p)
-        {
-            IdxMap _pair;
-            _pair.from_idx = idx;
-            _pair.to_idx = NOTHEADIDX;
-            if (p.local_id == 0)
-                _pair.to_idx = p.filament_id;
-            return _pair;
-        }
-    };
-
-    struct KeepHeads
-    {
-        __host__ __device__
-        bool operator()(const IdxMap& map_item)
-        {
-            return !(map_item.to_idx == NOTHEADIDX);
-        }
-    };
-
-    struct SelectFromIdx
-    {
-        __host__ __device__
-        uint operator()(const IdxMap& map_item)
-        {
-            return map_item.from_idx;
-        }
-    };
-
-    struct SelectToIdx
-    {
-        __host__ __device__
-        uint operator()(const IdxMap& map_item)
-        {
-            return map_item.to_idx;
-        }
-    };
-
     // thrust::device_vector<IdxMap> filament_head_map;
 
     // Using cell_head_idx and cell_count
@@ -84,21 +37,18 @@ namespace af
     thrust::device_vector<uint> cell_tail_idx;
     thrust::device_vector<uint> cell_count;
     thrust::device_vector<uint> cell_ids;
-
-    thrust::device_vector<IdxMap> filament_idxmap; // destination for particle idx to filament id
-    //  |
-    //  V
-    thrust::device_vector<IdxMap> filament_headonly_idxmap; // destination for only the idx to head filament id
-    //  |
-    //  V
-    thrust::device_vector<uint> filament_head_idx;  // destination for selecting filament head idx
-    //  +
-    thrust::device_vector<uint> filament_id;        // destination for filament id at that index
-    
+    thrust::device_vector<uint> filament_head_idx;  // destination for indices of filament heads
 
     bool verbose_neighbor_finding = false;
 
-
+    // Find the indices of the filament heads so we
+    // iterate over the particles in a filament by
+    // find the head then using the next property on
+    // the particle.
+    //
+    // This is basically a transform_if_gather
+    //
+    // Launch 1 thread per particle
     __global__ void update_filament_headlist(
         Particle* particles,
         size_t n_particles,
@@ -128,7 +78,6 @@ namespace af
         //: size(cell_size), dim(grid_dim) 
             : cells(cells)
         {
-            //ncells = grid_dim.x * grid_dim.y * grid_dim.z;
             this->ncells = cells.count();
 
             if (cell_head_idx.size() != ncells) 
@@ -171,43 +120,25 @@ namespace af
         __host__
         void update(ParticleDeviceArray& particles, uint num_filaments)
         {
-            this->resize_containers(particles.size(), num_filaments);
+            this->init_containers(particles.size(), num_filaments);
             this->sort_particles_by_cells(particles);
             this->count_particles_in_cells();
             this->build_filament_heads_map(particles);
-
-            // recalculate index map
-            //ParticleIdxMap idxMap;
-            //idxMap.update(particles);
-
             verbose_print(particles);
         }
 
     private:
 
         __host__
-        void resize_containers(const uint num_particles, const uint num_filaments)
+        void init_containers(const uint num_particles, const uint num_filaments)
         {
             // Allocate memory for per particle containers
             if (particle_cell_ids.size() != num_particles)
                 particle_cell_ids.resize(num_particles);
 
-            //if (filament_idxmap.size() != num_particles)
-            //    filament_idxmap.resize(num_particles);
-
-            // match the number of cells
-            // if (ncells != cell_ids.size())
-            //     cell_ids.resize(ncells)
-
             // Allocate memory for per filament containers
             if (filament_head_idx.size() != num_filaments)
                 filament_head_idx.resize(num_filaments);
-
-            //if (filament_id.size() != num_filaments)
-            //    filament_id.resize(num_filaments);
-
-            //if (filament_headonly_idxmap.size() != num_filaments)
-            //    filament_headonly_idxmap.resize(num_filaments);
         }
 
 
@@ -219,11 +150,6 @@ namespace af
 
             // sort the particle by their cell ids
             thrust::stable_sort_by_key(particle_cell_ids.begin(), particle_cell_ids.end(), particles.begin(), *this);  
-        
-            // ParticleHostArray h_particles(particles.begin(), particles.end());
-            // for (int i = 0; i < h_particles.size(); i++)
-            //     if (h_particles[i].local_id == 0)
-            //         std::cout << h_particles[i].filament_id << " @ " << i << std::endl;
         }
 
 
@@ -257,24 +183,6 @@ namespace af
         __host__
         void build_filament_heads_map(ParticleDeviceArray& particles)
         {
-            //thrust::counting_iterator<uint> count_begin(0);
-            //thrust::counting_iterator<uint> count_end = count_begin + particles.size();
-
-            // Give the tranformation an enumerated idx so we can create
-            // a map from idx to filament id of the only the heads
-            //thrust::transform(count_begin, count_end, particles.begin(), filament_idxmap.begin(), CreateIdxToHeadMap());
-
-            // copy the idxmap elements of only the heads
-            //auto headonly_end = thrust::remove_copy_if(filament_idxmap.begin(), filament_idxmap.end(), filament_headonly_idxmap.begin(), KeepHeads());
-
-            // Select into two seperate lists so one can sort the other
-            //thrust::transform(filament_headonly_idxmap.begin(), headonly_end, filament_head_idx.begin(), SelectFromIdx());
-            //thrust::transform(filament_headonly_idxmap.begin(), headonly_end, filament_id.begin(), SelectToIdx());
-
-            // Sort the indices to filament heads BY the filament ids.
-            // This will also use to get the idx of a filament head by
-            // access that filaments element in the filament_head_idx array.
-            //thrust::stable_sort_by_key(filament_id.begin(), filament_id.end(), filament_head_idx.begin());
             const int TPB = 256;
             const int N = particles.size();
 
@@ -284,12 +192,11 @@ namespace af
                 N, thrust::raw_pointer_cast(&filament_head_idx[0])
             );
 
-
-            // PRINT THE HEADS LIST TO SEE IF IT WORKED!!
-            thrust::host_vector<uint> h_fila_heads(filament_head_idx.size());
-            thrust::copy(filament_head_idx.begin(), filament_head_idx.end(), h_fila_heads.begin());
-            for (int i = 0; i < h_fila_heads.size(); i++)
-               std::cout << i << " @ " << h_fila_heads[i] << std::endl;
+            // // PRINT THE HEADS LIST TO SEE IF IT WORKED!!
+            // thrust::host_vector<uint> h_fila_heads(filament_head_idx.size());
+            // thrust::copy(filament_head_idx.begin(), filament_head_idx.end(), h_fila_heads.begin());
+            // for (int i = 0; i < h_fila_heads.size(); i++)
+            //    std::cout << i << " @ " << h_fila_heads[i] << std::endl;
         }
 
 
