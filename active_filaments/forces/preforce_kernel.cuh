@@ -48,7 +48,7 @@ namespace af
                 p1_local_id = p1->local_id;
                 is_tail = p1_local_id == 0;
                 is_head = (p1_local_id == n_per_filament - 1);
-                next_idx = prev_idx = -1;
+                next_idx = prev_idx = -1; // TODO: store this value somewhere for access
 
                 // loop over cells
                 int searched = 0;

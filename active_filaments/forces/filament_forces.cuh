@@ -23,8 +23,13 @@ namespace af
         int fidx = blockIdx.x*blockDim.x + threadIdx.x;
         if (fidx >= n_filaments) return;
 
-        //
-        // ... iterate over particles in filament
-        //
+        // iterate over particles in filament
+        uint head_particle_idx = filament_headlist[fid];
+        for (Particle* part = &particles[head_particle_idx];
+             part->next_idx != -1;
+             part =  &particles[part->next_idx])
+        {
+            if (fidx == 0) printf("%d ", part->id);
+        }
     }
 }
