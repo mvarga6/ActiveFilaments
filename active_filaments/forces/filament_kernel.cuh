@@ -33,11 +33,15 @@ namespace af
         if (fidx >= n_filaments) return;
 
         // iterate over particles in filament
-        uint head_particle_idx = filament_headlist[fidx];
-        for (Particle* p = &particles[head_particle_idx];
-             p != NULL; p = next(particles, p))
+        if (fidx == 0)
         {
-            if (fidx == 0) printf("%d ", p->id);
+            uint head_particle_idx = filament_headlist[fidx];
+            for (Particle* p = &particles[head_particle_idx];
+                p != NULL; p = next(particles, p))
+            {
+                printf("%d ", p->id);
+            }
+            printf("\n");
         }
     }
 }
