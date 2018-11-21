@@ -7,6 +7,7 @@
 #include "../neighbor_finding/neighbor_finder.cuh"
 #include "force_kernel.cuh"
 #include "preforce_kernel.cuh"
+#include "filament_kernel.cuh"
 
 namespace af
 {
@@ -22,7 +23,7 @@ namespace af
         __host__ 
         void update(ParticleDeviceArray& particles, uint parts_per_filament, uint num_filaments)
         {
-            const int TPB = 512;
+            const int TPB = 128;
 
             // update neighbors
             if (neighbors != NULL)
@@ -51,6 +52,14 @@ namespace af
                 thrust::raw_pointer_cast(&cell_head_idx[0]),
                 thrust::raw_pointer_cast(&cell_count[0]),
                 cells, 2, opts
+            );
+
+            filament_kernel<<<TPB, num_filaments/TPB + 1>>>
+            (
+                thrust::raw_pointer_cast(&particles[0]),
+                particles.size(),
+                thrust::raw_pointer_cast(&filament_head_idx[0]),
+                num_filaments
             );
         }
 
