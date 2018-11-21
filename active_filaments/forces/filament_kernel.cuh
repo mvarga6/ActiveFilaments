@@ -24,7 +24,7 @@ namespace af
         if (fidx >= n_filaments) return;
 
         // iterate over particles in filament
-        uint head_particle_idx = filament_headlist[fid];
+        uint head_particle_idx = filament_headlist[fidx];
         for (Particle* part = &particles[head_particle_idx];
              part->next_idx != -1;
              part =  &particles[part->next_idx])
