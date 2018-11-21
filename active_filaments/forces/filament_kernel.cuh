@@ -12,6 +12,15 @@
 
 namespace af
 {
+    __device__
+    Particle* next(Particle* particles, Particle* current)
+    {
+        if (current->next_idx == -1)
+            return NULL;
+        else
+            return &particles[current->next_idx];
+    }
+
     // launch a thread per filament
     __global__
     void filament_kernel(
@@ -25,11 +34,10 @@ namespace af
 
         // iterate over particles in filament
         uint head_particle_idx = filament_headlist[fidx];
-        for (Particle* part = &particles[head_particle_idx];
-             part->next_idx != -1;
-             part =  &particles[part->next_idx])
+        for (Particle* p = &particles[head_particle_idx];
+             p != NULL; p = next(particles, p))
         {
-            if (fidx == 0) printf("%d ", part->id);
+            if (fidx == 0) printf("%d ", p->id);
         }
     }
 }
