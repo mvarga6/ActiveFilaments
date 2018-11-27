@@ -73,8 +73,8 @@ namespace af
         //: size(cell_size), dim(grid_dim) 
             : cells(cells)
         {
-            // this->ncells = cells.count();
-
+            this->ncells = cells.count();
+            
             // if (cell_head_idx.size() != ncells) 
             //     cell_head_idx.resize(ncells);
             

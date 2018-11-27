@@ -31,7 +31,7 @@ namespace af
         Cells(uint3 cell_grid, float3 cell_size, bool periodic = true)
             : grid(cell_grid), size(cell_size), pbc(periodic)
             {
-                this->ncells = cells.count();
+                uint ncells = this->count();
 
                 if (cell_head_idx.size() != ncells) 
                     cell_head_idx.resize(ncells);
