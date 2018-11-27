@@ -3,7 +3,7 @@
 
 #include <cuda.h>
 
-#include "../particle.cuh"
+#include "../../particle.cuh"
 
 namespace af
 {

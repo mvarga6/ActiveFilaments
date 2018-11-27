@@ -5,6 +5,7 @@
 
 #include "bond_base.cuh"
 #include "../../utilities/vector_type_helpers.cuh"
+#include "../../particle.cuh"
 
 namespace af
 {

@@ -5,7 +5,7 @@
 #include <cuda.h>
 
 #include "../../utilities/vector_type_helpers.cuh"
-#include "../particle.cuh"
+#include "../../particle.cuh"
 
 namespace af 
 {
