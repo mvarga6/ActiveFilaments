@@ -51,7 +51,7 @@ namespace af
             int next_idx, prev_idx;
             bool is_tail, is_head;
             
-            int total_pairwise_comparisons = 0;
+            //int total_pairwise_comparisons = 0;
 
             //
             // Iterate over particles in target cell

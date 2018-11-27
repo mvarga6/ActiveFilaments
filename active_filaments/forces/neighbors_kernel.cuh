@@ -52,7 +52,7 @@ namespace af
                 float3 r1, f;
                 uint p1_local_id;
                 int next_idx, prev_idx;
-                float3 next_r, prev_r;
+                //float3 next_r, prev_r;
 
                 for (uint p1_idx = head;   // the particles we're applying
                     p1_idx < head + count; // forces too
