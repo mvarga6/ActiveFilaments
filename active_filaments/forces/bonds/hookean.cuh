@@ -24,8 +24,8 @@ namespace af
             float3 dr = p2->r - p1->r;
             const float r = mag(dr);
             const float f = -K * (R0 - r) / r;
-            p1.f += f * dr;
-            p2.f -= f * dr;
+            p1->f += f * dr;
+            p2->f -= f * dr;
         }
     };
 }
