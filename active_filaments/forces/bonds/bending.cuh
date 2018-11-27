@@ -3,18 +3,16 @@
 
 
 #include <cuda.h>
-#include <thrust/tuple.h>
 
 #include "../../utilities/vector_type_helpers.cuh"
+#include "../particle.cuh"
 
 namespace af 
 {
-    typedef thrust::tuple<float3,float3,float3> float3_triple;
-
     struct BendingBase
     {
         __host__ __device__
-        virtual float3_triple operator()(const float3 &r, const float3 &r_behind, const float3 &r_ahead) = 0;
+        virtual void operator()(Particle *p1, Particle *p2, Particle *p3) = 0;
     };
 
     struct CosineBending : public BendingBase
@@ -26,11 +24,11 @@ namespace af
             : K(k_bend){}
 
         __host__ __device__
-        float3_triple operator()(const float3 &r, const float3 &r_behind, const float3 &r_ahead)
+        void operator()(Particle *p1, Particle *p2, Particle *p3)
         {
             // TODO: apply BCs to these somehow
-            float3 r12 = r - r_ahead;
-            float3 r23 = r_behind - r;
+            float3 r12 = p2->r - p1->r;
+            float3 r23 = p3->r - p2->r;
 
             float dot_r12_r23 = dot(r12, r23);
             float r12r12 = dot(r12, r12);
@@ -42,13 +40,9 @@ namespace af
             float c1 = dot_r12_r23 / r12r12;
             float c2 = dot_r12_r23 / r23r23;
 
-            float3 f1 = A * (r23 - c1*r12);
-            float3 f2 = A * ((c1*r12 + r12) - (c2*r23 + r23));
-            float3 f3 = A * (c2*r23 - r12);
-
-            return thrust::make_tuple(f1,f2,f3);
-
-            //return zero_float3();
+            p1->f += A * (r23 - c1*r12);
+            p2->f += A * ((c1*r12 + r12) - (c2*r23 + r23));
+            p3->f += A * (c2*r23 - r12);
         }
     };
 }

@@ -3,12 +3,14 @@
 
 #include <cuda.h>
 
+#include "../particle.cuh"
+
 namespace af
 {
     struct BondBase
     {
         __host__ __device__
-        virtual float3 operator()(const float3& r1, const float3& r2) = 0;
+        virtual void operator()(Particle* p1, Particle* p2) = 0;
     };
 
     struct NoBond : public BondBase
@@ -17,9 +19,9 @@ namespace af
         NoBond(){}
 
         __host__ __device__
-        float3 operator()(const float3 &r1, const float3 &r2)
+        void operator()(Particle* p1, Particle* p2)
         {
-            return zero_float3(); 
+            
         }
     };
 }

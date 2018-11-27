@@ -27,16 +27,11 @@ namespace af
     // we can iterate throught all the particles
     // in a particular cell.
     //
-    // TODO: Add a cell-by-cell operation to calculate
-    // pair-wise forces with all nearby particles for 
-    // all particles in that cell
-    //  OR 
-    // do the same thing particle-by-particle
-    thrust::device_vector<uint> particle_cell_ids;
-    thrust::device_vector<uint> cell_head_idx;
-    thrust::device_vector<uint> cell_tail_idx;
-    thrust::device_vector<uint> cell_count;
-    thrust::device_vector<uint> cell_ids;
+    // thrust::device_vector<uint> particle_cell_ids;
+    // thrust::device_vector<uint> cell_head_idx;
+    // thrust::device_vector<uint> cell_tail_idx;
+    // thrust::device_vector<uint> cell_count;
+    // thrust::device_vector<uint> cell_ids;
     thrust::device_vector<uint> filament_head_idx;  // destination for indices of filament heads
 
     bool verbose_neighbor_finding = false;
@@ -78,19 +73,19 @@ namespace af
         //: size(cell_size), dim(grid_dim) 
             : cells(cells)
         {
-            this->ncells = cells.count();
+            // this->ncells = cells.count();
 
-            if (cell_head_idx.size() != ncells) 
-                cell_head_idx.resize(ncells);
+            // if (cell_head_idx.size() != ncells) 
+            //     cell_head_idx.resize(ncells);
             
-            if (cell_tail_idx.size() != ncells) 
-                cell_tail_idx.resize(ncells);
+            // if (cell_tail_idx.size() != ncells) 
+            //     cell_tail_idx.resize(ncells);
 
-            if (cell_count.size() != ncells)
-                cell_count.resize(ncells);
+            // if (cell_count.size() != ncells)
+            //     cell_count.resize(ncells);
 
-            if (cell_ids.size() != ncells)
-                cell_ids.resize(ncells);
+            // if (cell_ids.size() != ncells)
+            //     cell_ids.resize(ncells);
         }
 
         Cells get_cells()

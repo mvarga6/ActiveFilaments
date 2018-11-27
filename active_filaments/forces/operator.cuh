@@ -5,7 +5,7 @@
 
 #include "../particle.cuh"
 #include "../neighbor_finding/neighbor_finder.cuh"
-#include "force_kernel.cuh"
+#include "neighbors_kernel.cuh"
 #include "preforce_kernel.cuh"
 #include "filament_kernel.cuh"
 
@@ -17,7 +17,7 @@ namespace af
         ForceKernelOptions opts;
     public:
         __host__
-        Forces(ForceKernelOptions options, NeighborFinder* neighbor_finder = NULL)
+        Forces(ForceKernelOptions options, NeighborFinder* neighbor_finder)
             : neighbors(neighbor_finder), opts(options){}
 
         __host__ 
@@ -26,12 +26,15 @@ namespace af
             const int TPB = 128;
 
             // update neighbors
-            if (neighbors != NULL)
-                neighbors->update(particles, num_filaments);
+            neighbors->update(particles, num_filaments);
 
             // calculate forces
             Cells cells = neighbors->get_cells(); //TODO get this from sim container
             size_t n_cells = cells.count();
+
+            //
+            // Update properties needed before calculating forces
+            //
 
             preforce_kernel<<<TPB,n_cells/TPB + 1>>>
             (
@@ -45,7 +48,11 @@ namespace af
 
             cudaDeviceSynchronize();
 
-            force_kernel<<<TPB,n_cells/TPB + 1>>>
+            //
+            // Calculate pairwise forces between neigbors
+            //
+
+            neighbors_kernel<<<TPB,n_cells/TPB + 1>>>
             (
                 thrust::raw_pointer_cast(&particles[0]),
                 particles.size(),
@@ -54,12 +61,18 @@ namespace af
                 cells, 2, opts
             );
 
+            cudaDeviceSynchronize();
+
+            //
+            // Calculate filament backbone and bending forces
+            //
+
             filament_kernel<<<TPB, num_filaments/TPB + 1>>>
             (
                 thrust::raw_pointer_cast(&particles[0]),
                 particles.size(),
                 thrust::raw_pointer_cast(&filament_head_idx[0]),
-                num_filaments
+                num_filaments, opts
             );
         }
 

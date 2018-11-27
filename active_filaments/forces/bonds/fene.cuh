@@ -21,12 +21,14 @@ namespace af
             }
 
         __host__ __device__
-        float3 operator()(const float3 &r1, const float3 &r2)
+        void operator()(Particle* p1, Particle* p2)
         {
-            float3 dr = r2 - r1;
+            // TODO: Boundary Conditions
+            float3 dr = p2->r - p1->r;
             const float rr = mag_sqrd(dr);
-            const float f = H / (1 - rr/RRmax); 
-            return f * dr;
+            const float f = H / (1 - rr/RRmax);
+            p1->f += f * dr;
+            p2->f -= f * dr;
         }
     };
 }

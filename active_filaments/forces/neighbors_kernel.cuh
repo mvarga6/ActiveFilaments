@@ -22,7 +22,7 @@ namespace af
 
     // launch a thread per cell
     __global__ 
-    void force_kernel(
+    void neighbors_kernel(
         Particle* particles, 
         size_t n_particles,
         uint* cell_heads, 
@@ -34,23 +34,11 @@ namespace af
             int cell_idx = blockIdx.x*blockDim.x + threadIdx.x;
             if (cell_idx < cells.count())
             {
-                // create the force functors
-                BondBase * backbone_bond 
-                    = BondFactory::create(
-                        opts.backbone_bonds,
-                        opts.backbone_energy_scale,
-                        opts.backbone_length_scale);
-
                 PairWiseBase * particle_particle
                     = PairWiseFactory::create(
                         opts.filament_interaction,
                         opts.interaction_energy_scale,
                         opts.interaction_length_scale);
-
-                BendingBase * filament_bending
-                    = BondFactory::create(
-                        opts.filament_bending,
-                        opts.bending_energy_scale);
 
                 // find particles for this cell
                 uint head = cell_heads[cell_idx];
@@ -79,31 +67,6 @@ namespace af
 
                     // aggregate forces in ths object
                     f = zero_float3();
-
-                    //
-                    // Filament Backbone Forces
-                    //
-                    
-                    if (next_idx >= 0) // with particle ahead
-                    {
-                        next_r = particles[next_idx].r;
-                        f += (*backbone_bond)(r1, next_r);
-                    }
-                        
-                    if (prev_idx >= 0) // with particle behind
-                    {
-                        prev_r = particles[prev_idx].r;
-                        f += (*backbone_bond)(r1, prev_r);
-                    }
-                        
-                    //
-                    // Bond Bending Forces
-                    // 
-
-                    //float3_triple f1f2f3 = (*filament_bending)(r1, prev_r, next_r);
-                    //particles[prev_idx].f += thrust::get<0>(f1f2f3);
-                    //f += thrust::get<1>(f1f2f3);
-                    //particles[next_idx].f += thrust::get<2>(f1f2f3);
   
                     //
                     // Particle-Particle Forces
@@ -146,10 +109,7 @@ namespace af
                     p1->f += f;  // apply forces to particle
                 }
 
-                // delete force functions
-                delete backbone_bond;
                 delete particle_particle;
-                delete filament_bending;
             }
         }
 

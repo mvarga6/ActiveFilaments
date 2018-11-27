@@ -10,8 +10,21 @@
 
 namespace af 
 {
-    // launch a thread per cell
-    __global__ void preforce_kernel(
+    //
+    // Used to update properties on each particle that
+    // requires looking at nearby particles, both in the
+    // same filament and between filaments.
+    //
+    // 1. Updates indices of backbone bonds needed for filament kernel.
+    //   - Particle ahead in filament
+    //   - Particle behind in filament
+    // 2. Calculates the tangent of the filament at each particle in
+    //     their filament.
+    //
+    // Note: Launch one thread per cell
+
+    __global__ 
+    void preforce_kernel(
         Particle* particles, 
         size_t n_particles,
         uint n_per_filament,
@@ -37,9 +50,17 @@ namespace af
             float3 next_r, prev_r;
             int next_idx, prev_idx;
             bool is_tail, is_head;
+            
+            int total_pairwise_comparisons = 0;
 
-            for (uint p1_idx = head;   // the particles we're applying
-                p1_idx < head + count; // forces too
+            //
+            // Iterate over particles in target cell
+            // (the cell this thread is for, and the
+            // the particles we're applying forces to)
+            //
+
+            for (uint p1_idx = head;
+                p1_idx < head + count;
                 p1_idx++)
             {
                 // get first particle ref
@@ -50,17 +71,24 @@ namespace af
                 is_head = (p1_local_id == n_per_filament - 1);
                 next_idx = prev_idx = -1; // TODO: store this value somewhere for access
 
-                // loop over cells
-                int searched = 0;
+                //
+                // Iterate over neighboring cells
+                // (this includes the target cell)
+                //
+
                 for (int dir = 0; dir < n_dirs; dir++)
                 {
-                    searched++;
 
                     // find particles for the search cell
                     uint neighbor_cell_idx = cells.neighbor_idx(cell_idx, dir);
                     if (neighbor_cell_idx == NO_CELL_IDX) continue;
                     uint cell_head = cell_heads[neighbor_cell_idx];
                     uint cell_count = cell_counts[neighbor_cell_idx];
+
+                    //
+                    // Iterate over particles in neighboring cell
+                    // (the particles calculating forces against)
+                    //
                 
                     for (uint p2_idx = cell_head;        // the neighbor we're calculating
                             p2_idx < cell_head + cell_count; // forces with
@@ -73,12 +101,15 @@ namespace af
                         Particle* p2 = &particles[p2_idx];
                         r2 = p2->r;
                         
-                        // Same filament
+                        //
+                        // Update local filament properties when comparing
+                        // 2 particles from the same filament.
+                        //
+
                         if (p1->filament_id == p2->filament_id)
                         {
                             // distance along backbone
                             int local_dist = p2->local_id - p1_local_id;
-
                             if (local_dist == 1)
                             {
                                 next_idx = p2_idx;
@@ -117,8 +148,6 @@ namespace af
 
                             // stop the loop on p2
                             p2_idx = cell_head + cell_count;
-
-                            //printf("%d %d %d %d %d %d %d %f\n", dir, neighbor_cell_idx, cell_head, cell_count, searched, next_idx, prev_idx, p1->t);
                         }
                     }
                 }

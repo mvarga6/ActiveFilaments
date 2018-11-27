@@ -11,6 +11,16 @@
 
 namespace af 
 {
+    // Using cell_head_idx and cell_count
+    // we can iterate throught all the particles
+    // in a particular cell.
+    
+    thrust::device_vector<uint> particle_cell_ids; // this require resizing
+    thrust::device_vector<uint> cell_head_idx;
+    thrust::device_vector<uint> cell_tail_idx;
+    thrust::device_vector<uint> cell_count;
+    thrust::device_vector<uint> cell_ids;
+
     struct Cells
     {
         uint3 grid;
@@ -19,7 +29,22 @@ namespace af
     
         __host__ __device__
         Cells(uint3 cell_grid, float3 cell_size, bool periodic = true)
-            : grid(cell_grid), size(cell_size), pbc(periodic){}
+            : grid(cell_grid), size(cell_size), pbc(periodic)
+            {
+                this->ncells = cells.count();
+
+                if (cell_head_idx.size() != ncells) 
+                    cell_head_idx.resize(ncells);
+                
+                if (cell_tail_idx.size() != ncells) 
+                    cell_tail_idx.resize(ncells);
+
+                if (cell_count.size() != ncells)
+                    cell_count.resize(ncells);
+
+                if (cell_ids.size() != ncells)
+                    cell_ids.resize(ncells);
+            }
 
         __host__ __device__
         uint count()
@@ -106,6 +131,16 @@ namespace af
         {
             return in_range(ijk, zero_uint3(), grid).all();
         }
+
+        // TODO: implement convenience method for iterating
+        // particle neighbors
+        //
+        // __host__ __device__
+        // template <typename T>
+        // thrust::device_vector<uint> all_neighbor_indices<T>(T* array)
+        // {
+
+        // }
     };
 }
 
