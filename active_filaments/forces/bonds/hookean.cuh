@@ -18,7 +18,7 @@ namespace af
             : K(k), R0(r0){}
 
         __host__ __device__
-        float3 operator()(Particle* p1, Particle* p2)
+        void operator()(Particle* p1, Particle* p2)
         {
             // TODO: Boundary Conditions
             float3 dr = p2->r - p1->r;

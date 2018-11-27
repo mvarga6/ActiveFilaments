@@ -29,22 +29,7 @@ namespace af
     
         __host__ __device__
         Cells(uint3 cell_grid, float3 cell_size, bool periodic = true)
-            : grid(cell_grid), size(cell_size), pbc(periodic)
-            {
-                uint ncells = this->count();
-
-                if (cell_head_idx.size() != ncells) 
-                    cell_head_idx.resize(ncells);
-                
-                if (cell_tail_idx.size() != ncells) 
-                    cell_tail_idx.resize(ncells);
-
-                if (cell_count.size() != ncells)
-                    cell_count.resize(ncells);
-
-                if (cell_ids.size() != ncells)
-                    cell_ids.resize(ncells);
-            }
+            : grid(cell_grid), size(cell_size), pbc(periodic){}
 
         __host__ __device__
         uint count()

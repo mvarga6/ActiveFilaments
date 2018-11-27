@@ -75,17 +75,17 @@ namespace af
         {
             this->ncells = cells.count();
             
-            // if (cell_head_idx.size() != ncells) 
-            //     cell_head_idx.resize(ncells);
+            if (cell_head_idx.size() != ncells) 
+                cell_head_idx.resize(ncells);
             
-            // if (cell_tail_idx.size() != ncells) 
-            //     cell_tail_idx.resize(ncells);
+            if (cell_tail_idx.size() != ncells) 
+                cell_tail_idx.resize(ncells);
 
-            // if (cell_count.size() != ncells)
-            //     cell_count.resize(ncells);
+            if (cell_count.size() != ncells)
+                cell_count.resize(ncells);
 
-            // if (cell_ids.size() != ncells)
-            //     cell_ids.resize(ncells);
+            if (cell_ids.size() != ncells)
+                cell_ids.resize(ncells);
         }
 
         Cells get_cells()
